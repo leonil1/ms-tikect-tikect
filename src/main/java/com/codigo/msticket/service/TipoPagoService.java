@@ -10,8 +10,6 @@ import java.util.Map;
 
 public interface TipoPagoService {
     ResponseBase save(TipoPago tipoPago);
-    //Evento findEventoByTituloWithSectorAndAsientos(@Param("titulo") String titulo);
-
 
     List<TipoPago> listaEvento();
 

@@ -13,8 +13,6 @@ import java.util.Map;
 public interface TicketService {
 
     ResponseBase save(TicketResponse ticket);
-    //Evento findEventoByTituloWithSectorAndAsientos(@Param("titulo") String titulo);
-
     AsientoDTO buscarAsiento(int numeroAsiento,  Long idEvento, Long idUsuario);
     ResponseEntity<ResponseBase> buscarAsiento(Long idAsiento);
 

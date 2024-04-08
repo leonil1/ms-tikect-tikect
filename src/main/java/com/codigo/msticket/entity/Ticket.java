@@ -20,9 +20,6 @@ public class Ticket {
 
     private Integer cantidad;
 
-    
-
-
     @Column(name = "fecha_compra", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private Timestamp fechaCompra;
 
@@ -47,13 +44,6 @@ public class Ticket {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipopago_id")
     private TipoPago tipoPago;
-
-
-//    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "usuario_id")
-//    private Usuario usuario;
-//
 
     @PrePersist
     public void setfechaCreacion(){

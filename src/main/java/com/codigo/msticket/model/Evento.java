@@ -1,15 +1,10 @@
 package com.codigo.msticket.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -36,12 +31,9 @@ public class Evento {
 
     private boolean activo;
 
-
     private Timestamp fechaCreacion;
 
-
     private Timestamp fechaActualizacion;
-
 
     private String usuarioActualizacion;
 

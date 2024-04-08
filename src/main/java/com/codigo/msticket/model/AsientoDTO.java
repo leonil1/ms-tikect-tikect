@@ -2,6 +2,7 @@ package com.codigo.msticket.model;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -16,5 +17,6 @@ public class AsientoDTO {
     private int numeroAsiento;
     private String descripcionAsiento;
     private String telefono;
+    private BigDecimal precio;
 
 }

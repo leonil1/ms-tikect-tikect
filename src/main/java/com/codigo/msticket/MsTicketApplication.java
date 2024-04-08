@@ -1,5 +1,5 @@
 package com.codigo.msticket;
-import com.codigo.msticket.config.FeignClientConfig;
+//import com.codigo.msticket.config.FeignClientConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 //@ComponentScan("com.codigo.msticket.client")
 //@ComponentScan(basePackages = "com.codigo.msticket.client")
 @EnableFeignClients("com.codigo.msticket.client")
-@Import(FeignClientConfig.class)
+//@Import(FeignClientConfig.class)
 //@EnableEurekaClient
 //@EnableFeignClients
 //@ImportAutoConfiguration({FeignAutoConfiguration.class})
