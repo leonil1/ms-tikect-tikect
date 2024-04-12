@@ -1,19 +1,16 @@
 package com.codigo.msticket.service.impl;
 
+import com.codigo.msticket.aggregates.response.ResponseBase;
 import com.codigo.msticket.client.EventoClient;
 import com.codigo.msticket.client.UsuarioClient;
 import com.codigo.msticket.controller.TicketController;
-import com.codigo.msticket.exception.AsientoNotFoundException;
-import com.codigo.msticket.exception.BuscarAsientoException;
-import com.codigo.msticket.exception.EventoNotFoundException;
-import com.codigo.msticket.exception.TicketNotFoundException;
-import com.codigo.msticket.entity.Ticket;
-import com.codigo.msticket.entity.TipoPago;
+import com.codigo.msticket.entity.TicketEntity;
+import com.codigo.msticket.entity.TipoPagoEntity;
 import com.codigo.msticket.model.*;
 import com.codigo.msticket.repository.TicketRepository;
 import com.codigo.msticket.repository.TipoPagoRepository;
 import com.codigo.msticket.request.TicketResponse;
-import com.codigo.msticket.response.ResponseBase;
+import com.codigo.msticket.response.EntradaResponse;
 import com.codigo.msticket.service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +18,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -40,166 +35,171 @@ public class TicketServiceImpl implements TicketService {
     private final UsuarioClient usuarioClient;
     @Autowired
     private HttpServletRequest request;
-
-
     private final EventoClient eventoClient;
 
-    public ResponseEntity<ResponseBase> cambiarEstadoAsiento(Long id, int numeroAsiento, boolean estado) {
-        String token = request.getHeader("Authorization");
-        return eventoClient.cambiarEstadoAsiento(id, numeroAsiento, estado, token);
-    }
-    public ResponseEntity<ResponseBase> buscarAsiento(Long idAsiento) {
-        try {
-            String token = request.getHeader("Authorization");
-            // Obtener el evento con todos sus sectores y asientos
-            ResponseEntity<ResponseBase<Evento>> responseEntity = eventoClient.obtenerEvento(3L, token);
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                ResponseBase<Evento> responseBase = responseEntity.getBody();
-                if (responseBase != null && responseBase.getData() != null) {
-                    Evento evento = responseBase.getData();
-                    for (SectorAsiento sector : evento.getSector()) {
-                        // Iterar sobre los asientos del sector actual
-                        for (Asiento asiento : sector.getAsientos()) {
-                            // Verificar si el ID del asiento coincide
-                            if (asiento.getId().equals(idAsiento)) {
-                                // El asiento pertenece al sector y al evento
-                                String nombreEvento = evento.getTitulo();
-                                String nombreSector = sector.getNombre();
-                                int numeroAsiento = asiento.getNumeroAsiento();
-                                String descripcionAsiento = asiento.getDescripcion();
-
-                                // Puedes hacer lo que necesites con los datos
-                                // Por ejemplo, devolverlos como respuesta
-                                return ResponseEntity.ok(ResponseBase.exitoso("Asiento encontrado",
-                                        "Asiento " + numeroAsiento + " pertenece al sector " + nombreSector +
-                                                " del evento " + nombreEvento + ". Descripción: " + descripcionAsiento));
-                            }
-                        }
-                    }
-                    // Si llegamos aquí, significa que el asiento no se encontró en ningún sector
-                    return ResponseEntity.ok(ResponseBase.exitoso("Asiento no encontrado", null));
-                }
-            }
-            return ResponseEntity.ok(ResponseBase.exitoso("Evento no encontrado", null));
-        } catch (Exception e) {
-            return ResponseEntity.ok(ResponseBase.error("Ocurrió un error al buscar el asiento", null));
-        }
-    }
-
-    public ResponseEntity<ResponseBase> obtenerEvento(Long id) {
-        try {
-            logger.info("Consultando evento con ID: {}", id);
-            String token = request.getHeader("Authorization");
-            ResponseEntity<ResponseBase<Evento>> responseEntity = eventoClient.obtenerEvento(id, token);
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                ResponseBase<Evento> responseBase = responseEntity.getBody();
-                if (responseBase != null && responseBase.getData() != null) {
-                    Evento evento = responseBase.getData();
-                    logger.info("Evento encontrado: {}", evento);
-                    return ResponseEntity.ok(ResponseBase.exitoso("Evento encontrado", evento));
-                }
-            }
-            return ResponseEntity.ok(ResponseBase.exitoso("Evento no encontrado", null));
-        } catch (Exception e) {
-            logger.error("Error al consultar evento con ID: {}", id, e);
-            return ResponseEntity.ok(ResponseBase.error("Ocurrió un error al consultar el evento", null));
-        }
-    }
-
-    public AsientoDTO buscarAsiento(int numeroAsiento, Long idEvento, Long idUsuario) {
-        try {
-            String token = request.getHeader("Authorization");
-            Usuario usuario=usuarioClient.getUsuarioAutenticado(token);
-            // Obtener el evento con todos sus sectores y asientos
-            ResponseEntity<ResponseBase<Evento>> responseEntity = eventoClient.obtenerEvento(idEvento, token);
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                ResponseBase<Evento> responseBase = responseEntity.getBody();
-                if (responseBase != null && responseBase.getData() != null) {
-                    Evento evento = responseBase.getData();
-                    for (SectorAsiento sector : evento.getSector()) {
-                        // Iterar sobre los asientos del sector actual
-                        for (Asiento asiento : sector.getAsientos()) {
-                            // Verificar si el número del asiento coincide
-                            if (asiento.getNumeroAsiento() == numeroAsiento) {
-                                // El asiento pertenece al sector y al evento
-                                AsientoDTO asientoDTO = new AsientoDTO();
-                                asientoDTO.setIdEvento(evento.getId());
-                                asientoDTO.setTitulo(evento.getTitulo());
-                                asientoDTO.setFechaEvento(evento.getFechaEvento());
-                                asientoDTO.setHoraEvento(evento.getHoraEvento());
-                                asientoDTO.setDuracionEvento(evento.getDuracionEvento());
-                                asientoDTO.setNombreSector(sector.getNombre());
-                                asientoDTO.setNumeroAsiento(asiento.getNumeroAsiento());
-                                asientoDTO.setDescripcionAsiento(asiento.getDescripcion());
-                                asientoDTO.setTelefono(usuario.getTelefono());
-                                asientoDTO.setPrecio(sector.getPrecio());
-                                return asientoDTO;
-                            }
-                        }
-                    }
-                    // Si llegamos aquí, significa que el asiento no se encontró en ningún sector
-                    throw new AsientoNotFoundException("Asiento no encontrado");
-                }
-            }
-            throw new EventoNotFoundException("Evento no encontrado");
-        } catch (Exception e) {
-            throw new BuscarAsientoException("Ocurrió un error al buscar el asiento", e);
-        }
-    }
 
     @Override
     public ResponseBase save(TicketResponse ticketResponse) {
         try {
 
-            TipoPago tipoPago = tipoPagoRepository.findById(ticketResponse.getTipoPagoId()).orElse(null);
+            TipoPagoEntity tipoPago = tipoPagoRepository.findById(ticketResponse.getTipoPagoId()).orElse(null);
             String token = request.getHeader("Authorization");
-            ResponseEntity<ResponseBase<Evento>> responseEntity = eventoClient.obtenerEvento(ticketResponse.getEventoId(), token);
-            ResponseBase<Evento> responseBase = responseEntity.getBody();
-            Evento evento = null;
-            Asiento asiento=null;
-            if (responseBase.getData() != null) {
-                evento = responseBase.getData();
+
+            Optional<Evento> responseBase= eventoClient.obtenerEventoId(ticketResponse.getEventoId(),token);
+            Evento evento=null;
+            if(responseBase.isPresent()){
+                evento = responseBase.get();
 
             }
 
-            Ticket ticket=new Ticket();
+            Asiento asiento=null;
+            TicketEntity ticket=new TicketEntity();
 
             ticket.setIdEvento(evento.getId());
-            ticket.setIdNumeroAsiento(ticketResponse.getAsientoId());
+            ticket.setNumeroAsiento(ticketResponse.getNumeroAsiento());
             ticket.setTipoPago(tipoPago);
-            Usuario usuario=usuarioClient.getUsuarioAutenticado( token);
+            ticket.setObservaciones(ticketResponse.getObservaciones());
+            Usuario usuario=usuarioClient.getUsuarioAutenticado(token);
             ticket.setIdUsuario(usuario.getIdUsuario());
+            ticket.setUserCreate(usuario.getUsername());
 
-            eventoClient.cambiarEstadoAsiento(evento.getId(),ticketResponse.getAsientoId(),true, token);
+            for(SectorAsiento sectorAsiento:evento.getSector()){
+                ticket.setTotal(sectorAsiento.getPrecio().multiply(BigDecimal.valueOf(ticket.getCantidad())));
+            }
+
+
+            eventoClient.cambiarEstadoAsiento(evento.getId(),ticketResponse.getNumeroAsiento(),false, token);
 
             ticketRepository.save(ticket);
 
             return ResponseBase.exitoso("Ticket creado correctamente", Optional.of(ticket.getTicketId()));
         } catch (ConstraintViolationException e) {
-            return ResponseBase.error("Error de validación: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseBase.errorViolationException("Error de validación: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseBase.error("Error al procesar la solicitud", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseBase.errorInternalSErverError("Error al procesar la solicitud"+e.getMessage());
         }
     }
 
     @Override
-    public List<Ticket> listaEvento() {
-        return null;
+    public ResponseBase update(TicketEntity ticketEntity, Long id) {
+        try {
+            Optional<TicketEntity> existingTicketOpt = ticketRepository.findById(id);
+            if (existingTicketOpt.isPresent()) {
+                TicketEntity existingTicket = existingTicketOpt.get();
+
+                TipoPagoEntity tipoPago = tipoPagoRepository.findById(ticketEntity.getTipoPago().getTipoPagoId()).orElse(null);
+                String token = request.getHeader("Authorization");
+
+                Optional<Evento> responseBase = eventoClient.obtenerEventoId(ticketEntity.getTicketId(), token);
+                Evento evento = null;
+                if (responseBase.isPresent()) {
+                    evento = responseBase.get();
+                }
+
+                existingTicket.setIdEvento(evento.getId());
+                existingTicket.setNumeroAsiento(ticketEntity.getNumeroAsiento());
+                existingTicket.setTipoPago(tipoPago);
+                Usuario usuario = usuarioClient.getUsuarioAutenticado(token);
+                existingTicket.setIdUsuario(usuario.getIdUsuario());
+                existingTicket.setUserModif(usuario.getUsername());
+                existingTicket.setDateModif(new Date());
+
+                eventoClient.cambiarEstadoAsiento(evento.getId(), ticketEntity.getNumeroAsiento(), false, token);
+
+                ticketRepository.save(existingTicket);
+
+                return ResponseBase.exitoso("Ticket actualizado correctamente", Optional.of(existingTicket.getTicketId()));
+            } else {
+                return ResponseBase.errorNotFound("Ticket no encontrado");
+            }
+        } catch (ConstraintViolationException e) {
+            return ResponseBase.errorViolationException("Error de validación: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseBase.errorInternalSErverError("Error al procesar la solicitud" + e.getMessage());
+        }
     }
+
 
     @Override
-    public Ticket findById(Long id) {
-        return ticketRepository.findById(id)
-                .orElseThrow(() -> new TicketNotFoundException("Ticket not found with id " + id));
+    public ResponseBase findById(Long id) {
+        try {
+            Optional<TicketEntity> ticketEntity = ticketRepository.findById(id);
+            if (ticketEntity.isPresent()) {
+                return ResponseBase.exitoso("Ticket encontrado", ticketEntity.get());
+            } else {
+                return ResponseBase.errorNotFound("Ticket no encontrado");
+            }
+        } catch (Exception e) {
+            return ResponseBase.errorInternalSErverError("Ocurrió un error al buscar el ticket: " + e.getMessage());
+        }
     }
+    @Override
+    public ResponseBase deleteById(Long id) {
+        try {
+            Optional<TicketEntity> ticketEntity = ticketRepository.findById(id);
+            if (ticketEntity.isPresent()) {
+                ticketRepository.deleteById(id);
+                return ResponseBase.exitoso("Ticket Eliminado con exito", Optional.of(null));
+            } else {
+                return ResponseBase.errorNotFound("Ticket no encontrado");
+            }
+        } catch (Exception e) {
+            return ResponseBase.errorInternalSErverError("Ocurrió un error al buscar el ticket: " + e.getMessage());
+        }
+    }
+
+
+
 
     @Override
-    public ResponseEntity<String> actualizar(Long id, Map<String, String> requestMap) {
-        return null;
+    public ResponseBase generarentrada(Long id) {
+        EntradaResponse entradaResponse = new EntradaResponse();
+        try {
+            Optional<TicketEntity> ticketEntity = ticketRepository.findById(id);
+            if (ticketEntity.isPresent()) {
+                TicketEntity ticketEntityEncontrado=ticketEntity.get();
+                String token = request.getHeader("Authorization");
+                Optional<Evento> responseBase = eventoClient.obtenerEventoId(ticketEntity.get().getIdEvento(), token);
+
+
+
+                if (responseBase.isPresent() && responseBase.isPresent()) {
+                    Evento evento = responseBase.get();
+                   ResponseEntity<Usuario> usuario=usuarioClient.getUsuarioById(token,ticketEntity.get().getIdUsuario());
+
+                    entradaResponse.setTitulo(evento.getTitulo());
+                    entradaResponse.setDescripcion(evento.getDescripcion());
+                    entradaResponse.setTelefono(usuario.getBody().getTelefono());
+                    entradaResponse.setEmail(usuario.getBody().getEmail());
+
+
+                    for (SectorAsiento sectorAsiento : evento.getSector()) {
+
+
+                        for (Asiento asiento : sectorAsiento.getAsientos()) {
+
+                            if(asiento.getNumeroAsiento()==ticketEntityEncontrado.getNumeroAsiento()){
+                                entradaResponse.setNombreSector(sectorAsiento.getNombreSector());
+
+                                entradaResponse.setNumeroAsiento(ticketEntityEncontrado.getNumeroAsiento());
+
+                            }
+
+
+                        }
+                    }
+
+                    return ResponseBase.exitoso("Entrada encontrada", entradaResponse);
+                } else {
+                    return ResponseBase.errorNotFound("Evento no encontrado");
+                }
+            } else {
+                return ResponseBase.errorNotFound("Ticket no encontrado");
+            }
+        } catch (Exception e) {
+            return ResponseBase.errorInternalSErverError("Ocurrió un error: " + e.getMessage());
+        }
     }
 
-    @Override
-    public void deleteById(Long id) {
 
-    }
 }

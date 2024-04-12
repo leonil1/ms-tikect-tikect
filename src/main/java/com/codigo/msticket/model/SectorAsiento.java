@@ -14,7 +14,7 @@ import java.util.List;
 public class SectorAsiento {
     private Long id;
 
-    private String nombre;
+    private String nombreSector;
 
     private BigDecimal precio;
 

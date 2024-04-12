@@ -6,10 +6,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class EntradaResponse {
-    private Long idAsiento;
+    private String titulo;
+    private String descripcion;
+    private int numeroAsiento;
     private String nombreSector;
-    private Long idEvento;
-    private String nombreEvento;
-    private String descripcionAsiento;
+    private String  telefono;
+    private String email;
+
 
 }

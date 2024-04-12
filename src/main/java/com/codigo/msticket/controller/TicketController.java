@@ -1,94 +1,45 @@
 package com.codigo.msticket.controller;
 
-import com.codigo.msticket.client.EventoClient;
-import com.codigo.msticket.client.UsuarioClient;
-import com.codigo.msticket.entity.Ticket;
-import com.codigo.msticket.entity.TipoPago;
-import com.codigo.msticket.model.AsientoDTO;
+import com.codigo.msticket.aggregates.response.ResponseBase;
+import com.codigo.msticket.entity.TicketEntity;
 import com.codigo.msticket.request.TicketResponse;
-import com.codigo.msticket.response.ResponseBase;
 import com.codigo.msticket.service.TicketService;
 import com.codigo.msticket.service.TipoPagoService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/ticket")
 @RequiredArgsConstructor
 public class TicketController {
-    private static final Logger logger = LoggerFactory.getLogger(TicketController.class);
-
 
     private final TicketService ticketService;
     private final TipoPagoService tipoPagoService;
-    private final UsuarioClient usuarioClient;
-
-    @Autowired
-    private HttpServletRequest request;
-
-    @GetMapping("/entradas/{idTicket}")
-    public AsientoDTO buscarEntrada(@PathVariable Long idTicket){
-         Ticket ticket=ticketService.findById(idTicket);
-        AsientoDTO asientoDTO=ticketService.buscarAsiento(ticket.getIdNumeroAsiento(),ticket.getIdEvento(),ticket.getIdUsuario());
-
-        return asientoDTO;
-    }
-
-    //@GetMapping("/usuarioutenticado")
-    //public ResponseEntity<com.codigo.msticket.model.Usuario> obtenerUsuarioAutenticado() {
-        //com.codigo.msticket.model.Usuario usuario = usuarioClient.getUsuarioAutenticado( token );
-        //return ResponseEntity.ok(usuario);
-    //}
 
     @PostMapping("/form")
-    public ResponseEntity<ResponseBase> create(@RequestBody TicketResponse ticket) {
-        ResponseBase response = ticketService.save(ticket);
-        return ResponseEntity.status(response.getCode()).body(response);
-
+    public ResponseBase create(@RequestBody TicketResponse ticket) {
+        return ticketService.save(ticket);
     }
-
-    @PutMapping("/evento/asiento/{id}/estado")
-    public ResponseEntity<ResponseBase> cambiarEstadoAsiento(@PathVariable("id") Long id,
-                                                             @RequestParam("numeroAsiento") int numeroAsiento, @RequestParam("estado") boolean estado) {
-        return ticketService.cambiarEstadoAsiento(id, numeroAsiento, estado);
+    @PostMapping("/form/{id}")
+    public ResponseBase create(@RequestBody TicketEntity ticket, @PathVariable Long id) {
+        return ticketService.update(ticket, id);
     }
 
     @GetMapping("/obtener/{id}")
-    public ResponseEntity<ResponseBase> obtenerEvento(@PathVariable Long id) {
-        return ticketService.obtenerEvento(id);
+    public ResponseBase obtenerTicketId(@PathVariable Long id){
+        ResponseBase responseBase=ticketService.findById(id);
+        return responseBase;
+    }
+    @GetMapping("/delete/{id}")
+    public ResponseBase deleteTicketId(@PathVariable Long id){
+        ResponseBase responseBase=ticketService.findById(id);
+        return responseBase;
     }
 
-    @GetMapping("/hola")
-    public ResponseEntity<String> saludo(){
-        String token = request.getHeader("Authorization");
-        return ResponseEntity.ok("Hola");
-    }
-
-    @GetMapping("/todospago")
-    public ResponseEntity<ResponseBase> obtenerEvento() {
-        try {
-            List<TipoPago> tipoPago = tipoPagoService.listaEvento();
-            return ResponseEntity.ok(ResponseBase.exitoso("Tipos de pago encontrados", tipoPago));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ResponseBase.error("Tipos de pago no encontrados", HttpStatus.NOT_FOUND));
-        }
-    }
-
-    @PostMapping("/tipo/form")
-    public ResponseEntity<ResponseBase> createTipoPago(@RequestBody TipoPago tipoPago) {
-        ResponseBase response = tipoPagoService.save(tipoPago);
-        return ResponseEntity.status(response.getCode()).body(response);
-
+    @GetMapping("/entrada/{id}")
+    public ResponseBase buscarEntrada(@PathVariable Long id){
+        ResponseBase responseBase=ticketService.generarentrada(id);
+       return responseBase;
     }
 
 }

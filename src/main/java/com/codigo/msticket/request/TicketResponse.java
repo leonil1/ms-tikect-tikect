@@ -9,6 +9,7 @@ public class TicketResponse {
     private Integer cantidad;
     private Long tipoPagoId;
     private Long eventoId;
-    private int asientoId;
+    private int numeroAsiento;
+    private String observaciones;
 
 }

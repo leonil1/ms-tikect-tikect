@@ -31,11 +31,6 @@ public class Evento {
 
     private boolean activo;
 
-    private Timestamp fechaCreacion;
-
-    private Timestamp fechaActualizacion;
-
-    private String usuarioActualizacion;
 
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @NotNull

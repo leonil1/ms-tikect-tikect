@@ -1,21 +1,21 @@
 package com.codigo.msticket.service;
 
-import com.codigo.msticket.entity.Ticket;
-import com.codigo.msticket.entity.TipoPago;
-import com.codigo.msticket.response.ResponseBase;
+import com.codigo.msticket.aggregates.response.ResponseBase;
+import com.codigo.msticket.entity.TipoPagoEntity;
+
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
 
 public interface TipoPagoService {
-    ResponseBase save(TipoPago tipoPago);
+    ResponseBase save(TipoPagoEntity tipoPago);
 
-    List<TipoPago> listaEvento();
+    ResponseBase listaTipoPago();
 
-    TipoPago findById(Long id);
+    ResponseBase findById(Long id);
 
-    ResponseEntity<String> actualizar(Long id, Map<String, String> requestMap);
+    ResponseBase actualizar(Long id, TipoPagoEntity tipoPagoEntity);
 
-    void deleteById(Long id);
+    ResponseBase deleteById(Long id);
 }
