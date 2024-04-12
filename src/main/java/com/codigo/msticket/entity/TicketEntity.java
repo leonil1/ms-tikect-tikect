@@ -27,7 +27,7 @@ public class TicketEntity extends Audit implements Serializable {
     private Long ticketId;
 
     @Min(value = 0, message = "La cantidad debe ser mayor  a cero")
-    private int cantidad;
+    private int cantidad=1;
 
     @Min(value = 0, message = "El id del evento no puede ser cero")
     private Long idEvento;
@@ -60,7 +60,7 @@ public class TicketEntity extends Audit implements Serializable {
 
     @PrePersist
     public void setfechaCreacion(){
-    this.cantidad=1;
+
         setDateCreate(new Date());
 
     }

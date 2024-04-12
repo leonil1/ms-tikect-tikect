@@ -65,6 +65,16 @@ public class TicketServiceImpl implements TicketService {
 
             for(SectorAsiento sectorAsiento:evento.getSector()){
                 ticket.setTotal(sectorAsiento.getPrecio().multiply(BigDecimal.valueOf(ticket.getCantidad())));
+                for (Asiento asientobusqueda:sectorAsiento.getAsientos()){
+
+                    if( asientobusqueda.getNumeroAsiento()==ticketResponse.getNumeroAsiento()){
+                        if(!asientobusqueda.isEstado()){
+                            return ResponseBase.errorNotFound("Asiento no disponible");
+
+                        }
+
+                    }
+                }
             }
 
 
@@ -79,6 +89,7 @@ public class TicketServiceImpl implements TicketService {
             return ResponseBase.errorInternalSErverError("Error al procesar la solicitud"+e.getMessage());
         }
     }
+
 
     @Override
     public ResponseBase update(TicketEntity ticketEntity, Long id) {
@@ -171,12 +182,15 @@ public class TicketServiceImpl implements TicketService {
                     entradaResponse.setDescripcion(evento.getDescripcion());
                     entradaResponse.setTelefono(usuario.getBody().getTelefono());
                     entradaResponse.setEmail(usuario.getBody().getEmail());
+                    entradaResponse.setTotal(ticketEntityEncontrado.getTotal());
 
 
                     for (SectorAsiento sectorAsiento : evento.getSector()) {
 
 
                         for (Asiento asiento : sectorAsiento.getAsientos()) {
+
+
 
                             if(asiento.getNumeroAsiento()==ticketEntityEncontrado.getNumeroAsiento()){
                                 entradaResponse.setNombreSector(sectorAsiento.getNombreSector());
