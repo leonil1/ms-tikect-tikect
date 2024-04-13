@@ -6,11 +6,13 @@ import com.codigo.msticket.request.TicketResponse;
 import com.codigo.msticket.service.TicketService;
 import com.codigo.msticket.service.TipoPagoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/ticket")
 @RequiredArgsConstructor
+@RefreshScope
 public class TicketController {
 
     private final TicketService ticketService;
